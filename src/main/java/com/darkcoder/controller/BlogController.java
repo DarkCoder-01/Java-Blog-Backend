@@ -73,14 +73,30 @@ public class BlogController {
         return Result.succ(archives);
     }
 
+    @GetMapping("/blog/tags/{tag}")
+    public Result tag(@PathVariable(name = "tag") String tag, @RequestParam(defaultValue = "1") Integer currentPage) {
+        Page page = new Page(currentPage, 5);
+        IPage iPage = blogService.page(page, new QueryWrapper<Blog>().like("tags", tag));
+        return Result.succ(iPage);
+    }
+
+    @GetMapping("/blog/classify/{classification}")
+    public Result classify(@PathVariable(name = "classification") String classification, @RequestParam(defaultValue = "1") Integer currentPage) {
+        Page page = new Page(currentPage, 5);
+        IPage iPage = blogService.page(page, new QueryWrapper<Blog>().eq("classification", classification));
+
+        return Result.succ(iPage);
+    }
+
     @GetMapping("/blog/tags")
     public Result tags() {
         List<Blog> blogs = blogService.list();
+
         StringBuilder tags = new StringBuilder();
 
-        for (Blog b: blogs) {
+        for (Blog b : blogs) {
             tags.append(b.getTags());
-            if(b != blogs.get(blogs.size()-1)) {
+            if (b != blogs.get(blogs.size() - 1)) {
                 tags.append(",");
             }
         }
@@ -89,12 +105,11 @@ public class BlogController {
         set.addAll(Arrays.asList(array));
         return Result.succ(MapUtil.builder()
                 .put("allTags", set)
-                .map()
-        );
+                .map());
     }
 
-    @GetMapping("/blog/classification")
-    public Result classification() {
+    @GetMapping("/blog/classifications")
+    public Result classifications() {
         QueryWrapper<Blog> wrapper = new QueryWrapper<>();
         wrapper.groupBy("classification");
         wrapper.select("classification, count(*) as total_count");
@@ -103,9 +118,9 @@ public class BlogController {
         for(Blog b: blogs) {
             classifications.add(
                     MapUtil.builder()
-                    .put("count", b.getTotalCount())
-                    .put("classification", b.getClassification())
-                    .map()
+                            .put("count", b.getTotalCount())
+                            .put("classification", b.getClassification())
+                            .map()
             );
         }
         return Result.succ(classifications);
